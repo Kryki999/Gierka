@@ -24,8 +24,6 @@ var cursors;
 var score = 0;
 var gameOver = false;
 var scoreText;
-var endText;
-
 
 var game = new Phaser.Game(config);
 
@@ -35,7 +33,7 @@ function preload ()
     this.load.image('ground', 'assets/platform.png');
     this.load.image('star', 'assets/star.png');
     this.load.image('bomb', 'assets/bomb.png');
-    this.load.image('dude', 'assets/dude.png');
+    this.load.spritesheet('dude', 'assets/dude.png', { frameWidth: 32, frameHeight: 48 });
 }
 
 function create ()
@@ -61,6 +59,27 @@ function create ()
     //  Player physics properties. Give the little guy a slight bounce.
     player.setBounce(0.2);
     player.setCollideWorldBounds(true);
+
+    //  Our player animations, turning, walking left and walking right.
+    this.anims.create({
+        key: 'left',
+        frames: this.anims.generateFrameNumbers('dude', { start: 0, end: 3 }),
+        frameRate: 10,
+        repeat: -1
+    });
+
+    this.anims.create({
+        key: 'turn',
+        frames: [ { key: 'dude', frame: 4 } ],
+        frameRate: 20
+    });
+
+    this.anims.create({
+        key: 'right',
+        frames: this.anims.generateFrameNumbers('dude', { start: 5, end: 8 }),
+        frameRate: 10,
+        repeat: -1
+    });
 
     //  Input Events
     cursors = this.input.keyboard.createCursorKeys();
@@ -105,14 +124,20 @@ function update ()
     if (cursors.left.isDown)
     {
         player.setVelocityX(-160);
+
+        player.anims.play('left', true);
     }
     else if (cursors.right.isDown)
     {
         player.setVelocityX(160);
+
+        player.anims.play('right', true);
     }
     else
     {
         player.setVelocityX(0);
+
+        player.anims.play('turn');
     }
 
     if (cursors.up.isDown && player.body.touching.down)
@@ -126,7 +151,7 @@ function collectStar (player, star)
     star.disableBody(true, true);
 
     //  Add and update the score
-    score += 1;
+    score += 10;
     scoreText.setText('Score: ' + score);
 
     if (stars.countActive(true) === 0)
@@ -155,7 +180,10 @@ function hitBomb (player, bomb)
 
     player.setTint(0xff0000);
 
+    player.anims.play('turn');
+    
+    var endText = this.add.text(10, 100, 'Kasjan zabrał ci całe zioło i uciekł', { fontSize: '32px', fill: '#900' });
+
     gameOver = true;
     
-    endText = this.add.text(10, 100, 'Kasjan zabrał ci całe zioło i uciekł', { fontSize: '32px', fill: '#900' });
 }
